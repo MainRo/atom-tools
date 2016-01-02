@@ -1,0 +1,53 @@
+#! /usr/bin/env bash
+
+set -e
+
+usage() {
+    echo "Adds the provided component to the rdm daemon "
+    echo "Usage : "
+    echo "atom-rtags-gen [project path]"
+}
+
+exit_on_error() {
+    echo -e "\033[31m[$1]\033[0m"
+    exit -1
+}
+
+bear_get_lib_path() {
+    local prefix=$(dirname $(dirname $(which bear)))
+    if [ ! -z "$prefix" ] ; then
+        local ld_preload=""
+        if [ ! -f "${prefix}/lib/i386-linux-gnu/libear.so" ] ; then
+            ld_preload="${prefix}/lib/i386-linux-gnu/libear.so"
+        fi
+        if [ ! -f "$project_config_file" ] ; then
+            ld_preload="${ld_preload:+$ld_preload:}${prefix}/lib/x86_64-linux-gnu/libear.so"
+        fi
+        echo $ld_preload
+    fi
+}
+
+if [ $# -ne 1 ] ; then
+   usage
+   exit -1
+fi
+
+config_file_name=compile_commands.json
+project_path=$1
+project_config_file=$project_path/$config_file_name
+bear_libs=$(bear_get_lib_path)
+
+# Generate compile config is it does not exist
+if [ ! -f "$project_config_file" ] ; then
+    make clean
+    if [ -z "$bear_libs" ] ; then
+        bear -o $project_config_file make || exit_on_error "Build error"
+    else
+        bear -l $bear_libs -o $project_config_file make || exit_on_error "Build error"
+    fi
+fi
+
+# Add compile config to index daemon
+rc -J $project_config_file
+
+echo -e "\033[32m[Done]\033[0m"

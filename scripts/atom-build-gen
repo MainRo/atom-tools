@@ -1,0 +1,58 @@
+#! /usr/bin/env bash
+
+set -e
+
+usage() {
+    echo "Generates an atom build config"
+    echo "Usage : "
+    echo "atom-build-gen [project path]"
+}
+
+if [ $# -ne 1 ] ; then
+   usage
+   exit -1
+fi
+
+build_file_name=.atom-build.json
+component_path=$1
+component_build_file=$component_path/$build_file_name
+build_path=$PWD
+
+if [ -z "$component_path" ] ; then
+    echo -e "\033[31m[Unknown component]\033[0m"
+    exit -1
+fi
+
+echo "{
+    \"cmd\": \"make\",
+    \"name\": \"all\",
+    \"cwd\": \"$build_path\",
+    \"errorMatch\": [
+        \"\\n*\\\\.o:(?<file>.+):(?<line>\\\\d+): \",
+        \"\\n(?<file>.+):(?<line>\\\\d+):(?<col>\\\\d+): (?!(warning|note))\",
+        \"\\n(?<file>.+):(?<line>\\\\d+): (?!(warning|note))\"
+    ],
+    \"targets\": {
+        \"clean\": {
+            \"cwd\": \"$build_path\",
+            \"cmd\": \"make\",
+            \"args\": [ \"clean\" ],
+            \"errorMatch\": [
+                \"\\n(?<file>.+):(?<line>\\\\d+):(?<col>\\\\d+): (?!(warning|note))\",
+                \"\\n(?<file>.+):(?<line>\\\\d+): (?!(warning|note))\"
+            ]
+        },
+        \"check\": {
+            \"cwd\": \"$build_path\",
+            \"cmd\": \"make\",
+            \"args\": [ \"check\" ],
+            \"errorMatch\": [
+                \"\\n(?<file>.+):(?<line>\\\\d+):(?<col>\\\\d+): (?!(warning|note))\",
+                \"\\n(?<file>.+):(?<line>\\\\d+): (?!(warning|note))\"
+            ]
+        }
+    }
+}" > $component_build_file
+
+
+echo -e "\033[32m[Done]\033[0m"
