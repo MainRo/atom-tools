@@ -17,10 +17,10 @@ bear_get_lib_path() {
     local prefix=$(dirname $(dirname $(which bear)))
     if [ ! -z "$prefix" ] ; then
         local ld_preload=""
-        if [ ! -f "${prefix}/lib/i386-linux-gnu/libear.so" ] ; then
+        if [ -f "${prefix}/lib/i386-linux-gnu/libear.so" ] ; then
             ld_preload="${prefix}/lib/i386-linux-gnu/libear.so"
         fi
-        if [ ! -f "$project_config_file" ] ; then
+        if [  -f "${prefix}/lib/x86_64-linux-gnu/libear.so" ] ; then
             ld_preload="${ld_preload:+$ld_preload:}${prefix}/lib/x86_64-linux-gnu/libear.so"
         fi
         echo $ld_preload
