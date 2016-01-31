@@ -1,0 +1,8 @@
+'.source.c, .source.cpp':
+  'extern C':
+    'prefix': 'ext'
+    'body': """
+      extern "C" {
+      $1
+      }
+    """
